@@ -5,15 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
-use Illuminate\Http\Request;
 use App\Models\User;
+use App\Traits\AuthTrait;
 use App\Traits\HandlesApiResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class ApiController extends Controller
 {
     use HandlesApiResponse;
+    use AuthTrait;
     // Register API [POST] (name, email, password, phone_no)
     public function register(RegisterRequest $request)
     {
@@ -39,14 +39,15 @@ class ApiController extends Controller
     // Login API (POST) [email, password]
     public function login(LoginRequest $request)
     {
-        return $this->safeCall(function () use ($request){
+        return $this->safeCall(function () use ($request) {
             // Check user by "email" value
             $user = User::where("email", $request->email)->first();
 
             if (!$user || !Hash::check($request->password, $user->password)) {
                 return $this->errorResponse(
                     'Invalid credentials',
-                    401);
+                    401
+                );
             }
 
             // Generate auth token
@@ -56,38 +57,11 @@ class ApiController extends Controller
                 'User logged in successfully',
                 ['token' => $token],
             );
-
         });
     }
 
     // Profile API (GET) (Auth Token - Header)
-    public function profile()
-    {
-        return $this->safeCall(function () {
-            $user = Auth::user();
 
-            return $this->successResponse(
-                'User profile data',
-                ['user' => $user],
-            );
-        });
-    }
-
-    // Refresh Token API (GET) (Auth Token - Header)
-    public function refreshToken()
-    {
-        return $this->safeCall(function () {
-            $user = request()->user(); //user data
-            $token = $user->createToken("newToken");
-
-            $refreshToken = $token->accessToken;
-
-            return $this->successResponse(
-                'Token refreshed successfully',
-                ['token' => $refreshToken],
-            );
-        });
-    }
 
     // Logout API (GET) (Auth Token - Header)
     public function logout()
@@ -100,4 +74,6 @@ class ApiController extends Controller
             );
         });
     }
+
+
 }

@@ -47,4 +47,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function sendPasswordResetNotification($token)
+    {
+        // API-based reset URL
+        $url = config('app.frontend_url') . '/reset-password?token=' . $token;
+
+        $this->notify(new \App\Notifications\ResetPasswordNotification($url));
+    }
 }
